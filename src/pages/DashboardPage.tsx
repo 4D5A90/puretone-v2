@@ -29,8 +29,10 @@ export default function DashboardPage() {
 			fats: number;
 		};
 		totalTDEE: number;
+		dailyCaloriesTarget: number;
 		stepCalories: number;
 		steps: number;
+		estimatedDailySteps: number;
 		logs: ActivityLog[];
 	} | null>(null);
 	const [todayWorkout, setTodayWorkout] = useState<ScheduledWorkout | null>(
@@ -40,6 +42,7 @@ export default function DashboardPage() {
 	const loadTargets = useCallback(async () => {
 		if (profile) {
 			const targets = await dietService.getDailyTargets(profile);
+			console.log(targets);
 			setData(targets);
 		}
 	}, [profile]);
@@ -96,10 +99,66 @@ export default function DashboardPage() {
 
 			<div className="grid grid-cols-2 gap-4">
 				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
-					<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
+					<p className="text-zinc-400 text-sm mb-1">TDEE</p>
 					<h2 className="text-4xl font-bold text-white">
 						{data.totalTDEE} <span className="text-lg text-zinc-500">kcal</span>
 					</h2>
+				</div>
+
+				{/* Steps Progress */}
+				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
+					<div className="flex justify-between items-center mb-3">
+						<p className="text-zinc-400 text-sm">Daily Steps</p>
+						<p className="text-sm font-medium text-white">
+							{data.steps.toLocaleString()} /{" "}
+							{data.estimatedDailySteps?.toLocaleString()}
+						</p>
+					</div>
+					<div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
+						<div
+							className={`h-full transition-all duration-500 ${
+								data.steps >= data.estimatedDailySteps
+									? "bg-gradient-to-r from-green-500 to-emerald-500"
+									: data.steps >= data.estimatedDailySteps * 0.5
+										? "bg-gradient-to-r from-blue-500 to-cyan-500"
+										: "bg-gradient-to-r from-zinc-600 to-zinc-500"
+							}`}
+							style={{
+								width: `${Math.min((data.steps / data.estimatedDailySteps) * 100, 100)}%`,
+							}}
+						/>
+					</div>
+					<p className="text-xs text-zinc-500 mt-2">
+						{Math.round((data.steps / data.estimatedDailySteps) * 100)}% of
+						daily goal
+					</p>
+				</div>
+
+				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
+					<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
+					<h2 className="text-4xl font-bold text-white">
+						{data.dailyCaloriesTarget}
+						<span className="text-lg text-zinc-500">kcal</span>
+					</h2>
+				</div>
+				<div className="col-span-2">
+					<div className="grid grid-cols-3 gap-4">
+						<MacroCard
+							label="Protein"
+							amount={data.macros.protein}
+							color="bg-red-500"
+						/>
+						<MacroCard
+							label="Carbs"
+							amount={data.macros.carbs}
+							color="bg-yellow-500"
+						/>
+						<MacroCard
+							label="Fats"
+							amount={data.macros.fats}
+							color="bg-green-500"
+						/>
+					</div>
 				</div>
 				<div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 col-span-2">
 					<div className="flex justify-between items-center mb-2">
@@ -143,24 +202,6 @@ export default function DashboardPage() {
 						</div>
 					)}
 				</div>
-			</div>
-
-			<div className="grid grid-cols-3 gap-4">
-				<MacroCard
-					label="Protein"
-					amount={data.macros.protein}
-					color="bg-red-500"
-				/>
-				<MacroCard
-					label="Carbs"
-					amount={data.macros.carbs}
-					color="bg-yellow-500"
-				/>
-				<MacroCard
-					label="Fats"
-					amount={data.macros.fats}
-					color="bg-green-500"
-				/>
 			</div>
 		</div>
 	);

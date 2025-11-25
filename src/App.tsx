@@ -6,6 +6,7 @@ import DashboardPage from "./pages/DashboardPage";
 import WorkoutPage from "./pages/WorkoutPage";
 import ActivityPage from "./pages/ActivityPage";
 import ActiveWorkoutPage from "./pages/ActiveWorkoutPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function App() {
 	const hasCompletedOnboarding = useUserStore(
@@ -23,6 +24,7 @@ function App() {
 				<Route path="workout" element={<WorkoutPage />} />
 				<Route path="workout/active" element={<ActiveWorkoutPage />} />
 				<Route path="activity" element={<ActivityPage />} />
+				<Route path="profile" element={<ProfilePage />} />
 			</Route>
 		</Routes>
 	);

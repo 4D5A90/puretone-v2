@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Home, Dumbbell, Activity } from "lucide-react";
+import { Home, Dumbbell, Activity, User } from "lucide-react";
 import clsx from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -10,6 +10,7 @@ export default function AppLayout() {
 		{ path: "/", icon: Home, label: "Home" },
 		{ path: "/workout", icon: Dumbbell, label: "Workout" },
 		{ path: "/activity", icon: Activity, label: "Activity" },
+		{ path: "/profile", icon: User, label: "Profile" },
 	];
 
 	return (

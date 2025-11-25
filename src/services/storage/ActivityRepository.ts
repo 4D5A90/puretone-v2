@@ -1,16 +1,23 @@
 import type { StorageInterface } from "./StorageInterface";
 
+export const ActivityType = {
+	steps: "steps",
+	cardio: "min of cardio",
+	water: "cl of water",
+} as const;
+
 export interface ActivityLog {
 	id: string;
 	timestamp: string;
-	type: "steps" | "cardio";
+	type: keyof typeof ActivityType;
 	amount: number;
 }
 
 export interface DailyActivity {
 	date: string; // ISO date string YYYY-MM-DD
 	steps: number;
-	cardioMinutes: number;
+	cardio: number;
+	water: number;
 	logs: ActivityLog[];
 }
 
@@ -37,10 +44,21 @@ export class ActivityRepository {
 	async getTodayActivity(): Promise<DailyActivity> {
 		const today = new Date().toISOString().split("T")[0];
 		const activity = await this.getActivity(today);
-		return activity || { date: today, steps: 0, cardioMinutes: 0, logs: [] };
+		return (
+			activity || {
+				date: today,
+				steps: 0,
+				cardio: 0,
+				water: 0,
+				logs: [],
+			}
+		);
 	}
 
-	async addActivity(type: "steps" | "cardio", amount: number): Promise<void> {
+	async addActivity(
+		type: "steps" | "cardio" | "water",
+		amount: number,
+	): Promise<void> {
 		const today = await this.getTodayActivity();
 		const log: ActivityLog = {
 			id: crypto.randomUUID(),
@@ -51,11 +69,7 @@ export class ActivityRepository {
 
 		today.logs.push(log);
 
-		if (type === "steps") {
-			today.steps += amount;
-		} else {
-			today.cardioMinutes += amount;
-		}
+		today[type] += amount;
 
 		await this.saveActivity(today);
 	}

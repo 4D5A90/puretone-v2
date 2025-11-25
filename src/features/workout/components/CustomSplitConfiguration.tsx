@@ -43,12 +43,8 @@ interface CustomSplitConfigurationProps {
 }
 
 export function CustomSplitConfiguration({
-	customSplitType,
-	setCustomSplitType,
 	daysPerWeek,
 	setDaysPerWeek,
-	currentCustomDay,
-	setCurrentCustomDay,
 	repRanges,
 	setRepRanges,
 	currentColumns,
@@ -56,80 +52,19 @@ export function CustomSplitConfiguration({
 	moveMuscle,
 	onGenerate,
 	hasSelection,
-}: CustomSplitConfigurationProps) {
+}: Omit<
+	CustomSplitConfigurationProps,
+	| "customSplitType"
+	| "setCustomSplitType"
+	| "currentCustomDay"
+	| "setCurrentCustomDay"
+>) {
 	const [step, setStep] = useState<1 | 2>(1);
 
 	if (step === 1) {
 		return (
 			<div className="flex-1 flex flex-col gap-4 overflow-y-auto p-4">
 				<h2 className="text-xl font-bold">Configuration</h2>
-
-				{/* Split Type Selector */}
-				<div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-					<label className="block mb-2 text-sm font-medium">Split Type</label>
-					<div className="grid grid-cols-2 gap-2">
-						<button
-							type="button"
-							onClick={() => {
-								setCustomSplitType("single");
-								setDaysPerWeek(1);
-							}}
-							className={clsx(
-								"px-3 py-3 rounded-lg text-sm font-medium transition-colors border",
-								customSplitType === "single"
-									? "bg-blue-600 text-white border-blue-500"
-									: "bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700",
-							)}
-						>
-							Single Day
-						</button>
-						<button
-							type="button"
-							onClick={() => {
-								setCustomSplitType("ppl");
-								setDaysPerWeek(3);
-							}}
-							className={clsx(
-								"px-3 py-3 rounded-lg text-sm font-medium transition-colors border",
-								customSplitType === "ppl"
-									? "bg-blue-600 text-white border-blue-500"
-									: "bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700",
-							)}
-						>
-							Push/Pull/Legs (3)
-						</button>
-						<button
-							type="button"
-							onClick={() => {
-								setCustomSplitType("upper_lower");
-								setDaysPerWeek(2);
-							}}
-							className={clsx(
-								"px-3 py-3 rounded-lg text-sm font-medium transition-colors border",
-								customSplitType === "upper_lower"
-									? "bg-blue-600 text-white border-blue-500"
-									: "bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700",
-							)}
-						>
-							Upper/Lower (2)
-						</button>
-						<button
-							type="button"
-							onClick={() => {
-								setCustomSplitType("full_body");
-								setDaysPerWeek(3);
-							}}
-							className={clsx(
-								"px-3 py-3 rounded-lg text-sm font-medium transition-colors border",
-								customSplitType === "full_body"
-									? "bg-blue-600 text-white border-blue-500"
-									: "bg-zinc-800 text-zinc-300 border-zinc-700 hover:bg-zinc-700",
-							)}
-						>
-							Full Body (3)
-						</button>
-					</div>
-				</div>
 
 				{/* Days per week */}
 				<div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
@@ -150,14 +85,6 @@ export function CustomSplitConfiguration({
 						max="7"
 						className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-4 py-2 text-white"
 					/>
-					<p className="text-xs text-zinc-500 mt-2">
-						{customSplitType === "ppl" &&
-							daysPerWeek > 3 &&
-							"Extra days will be customizable."}
-						{customSplitType === "upper_lower" &&
-							daysPerWeek > 2 &&
-							"Extra days will be customizable."}
-					</p>
 				</div>
 
 				{/* Rep Range Configuration */}
@@ -265,39 +192,13 @@ export function CustomSplitConfiguration({
 			{/* Header with Back button */}
 			<div className="flex-none px-4 pt-2 flex items-center gap-2">
 				<button
+					type="button"
 					onClick={() => setStep(1)}
 					className="p-2 hover:bg-zinc-800 rounded-lg transition-colors text-zinc-400 hover:text-white"
 				>
 					<ChevronLeft size={24} />
 				</button>
 				<h2 className="text-xl font-bold">Configure Focus</h2>
-			</div>
-
-			{/* Day Navigation for multi-day splits */}
-			<div className="flex-none px-4">
-				{customSplitType !== "single" && (
-					<div className="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-						<label className="block mb-2 text-sm font-medium">
-							Day {currentCustomDay + 1} of {daysPerWeek}
-						</label>
-						<div className="flex gap-2 overflow-x-auto pb-2">
-							{Array.from({ length: daysPerWeek }).map((_, i) => (
-								<button
-									key={i}
-									type="button"
-									onClick={() => setCurrentCustomDay(i)}
-									className={`flex-none px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
-										currentCustomDay === i
-											? "bg-purple-600 text-white"
-											: "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-									}`}
-								>
-									Day {i + 1}
-								</button>
-							))}
-						</div>
-					</div>
-				)}
 			</div>
 
 			<div className="flex-1 overflow-y-auto flex flex-col gap-4 pb-4 px-4">

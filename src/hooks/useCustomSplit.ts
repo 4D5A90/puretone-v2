@@ -13,10 +13,15 @@ export type ColumnId = "available" | "high" | "medium" | "low";
 export const MUSCLE_GROUPS: { id: MuscleGroup; label: string }[] = [
 	{ id: "chest", label: "Chest" },
 	{ id: "back", label: "Back" },
-	{ id: "quads", label: "Legs" },
 	{ id: "shoulders", label: "Shoulders" },
-	{ id: "biceps", label: "Arms" },
-	{ id: "abs", label: "Core" },
+	{ id: "biceps", label: "Biceps" },
+	{ id: "triceps", label: "Triceps" },
+	{ id: "quads", label: "Quads" },
+	{ id: "hamstrings", label: "Hamstrings" },
+	{ id: "glutes", label: "Glutes" },
+	{ id: "adductors", label: "Adductors" },
+	{ id: "calves", label: "Calves" },
+	{ id: "abs", label: "Abs" },
 ];
 
 export function useCustomSplit() {

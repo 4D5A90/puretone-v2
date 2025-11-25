@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserStore, type UserProfile } from "../../store/userStore";
+import {
+	useUserStore,
+	type UserProfile,
+	type ActivityLevelType,
+	ActivityLevel,
+	Goal,
+} from "../../store/userStore";
 import clsx from "clsx";
 
 export default function ProfileForm() {
@@ -15,8 +21,9 @@ export default function ProfileForm() {
 		height: 175,
 		weight: 70,
 		gender: "male",
-		activityLevel: "moderate",
-		goal: "maintain",
+		activityLevel: ActivityLevel.Moderate,
+		goal: Goal.Maintain,
+		estimatedDailySteps: 10000,
 	});
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -136,19 +143,57 @@ export default function ProfileForm() {
 						id="activityLevel"
 						name="activityLevel"
 						value={formData.activityLevel}
-						onChange={handleChange}
+						onChange={(e) =>
+							setFormData((prev) => ({
+								...prev,
+								activityLevel: Number(e.target.value) as ActivityLevelType,
+							}))
+						}
 						className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
 					>
-						<option value="sedentary">
+						<option value={ActivityLevel.Sedentary}>
 							Sedentary (Office job, little exercise)
 						</option>
-						<option value="light">Light (Exercise 1-3 days/week)</option>
-						<option value="moderate">Moderate (Exercise 3-5 days/week)</option>
-						<option value="active">Active (Exercise 6-7 days/week)</option>
-						<option value="very_active">
+						<option value={ActivityLevel.Light}>
+							Light (Exercise 1-3 days/week)
+						</option>
+						<option value={ActivityLevel.Moderate}>
+							Moderate (Exercise 3-5 days/week)
+						</option>
+						<option value={ActivityLevel.Active}>
+							Active (Exercise 6-7 days/week)
+						</option>
+						<option value={ActivityLevel.VeryActive}>
 							Very Active (Physical job + exercise)
 						</option>
 					</select>
+				</div>
+
+				<div>
+					<label
+						htmlFor="estimatedDailySteps"
+						className="block text-sm font-medium text-zinc-400 mb-1"
+					>
+						Estimated Daily Steps
+					</label>
+					<input
+						id="estimatedDailySteps"
+						type="number"
+						name="estimatedDailySteps"
+						value={formData.estimatedDailySteps}
+						onChange={(e) =>
+							setFormData((prev) => ({
+								...prev,
+								estimatedDailySteps: Number(e.target.value),
+							}))
+						}
+						min="0"
+						step="1000"
+						className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-white focus:ring-2 focus:ring-blue-500 outline-none"
+					/>
+					<p className="text-xs text-zinc-500 mt-1">
+						Your typical daily step count (used for TDEE calculation)
+					</p>
 				</div>
 
 				<div>
@@ -157,9 +202,9 @@ export default function ProfileForm() {
 					</label>
 					<div className="grid grid-cols-3 gap-2">
 						{[
-							{ value: "cut", label: "Lose Fat" },
-							{ value: "maintain", label: "Maintain" },
-							{ value: "bulk", label: "Build Muscle" },
+							{ value: Goal.Cut, label: "Lose Fat" },
+							{ value: Goal.Maintain, label: "Maintain" },
+							{ value: Goal.Bulk, label: "Build Muscle" },
 						].map((option) => (
 							<button
 								key={option.value}
@@ -167,7 +212,7 @@ export default function ProfileForm() {
 								onClick={() =>
 									setFormData({
 										...formData,
-										goal: option.value as UserProfile["goal"],
+										goal: option.value,
 									})
 								}
 								className={clsx(

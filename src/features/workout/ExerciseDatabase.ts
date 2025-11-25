@@ -8,7 +8,8 @@ export type MuscleGroup =
 	| "hamstrings"
 	| "calves"
 	| "abs"
-	| "glutes";
+	| "glutes"
+	| "adductors";
 
 export interface Exercise {
 	id: string;

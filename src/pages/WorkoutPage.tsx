@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Plus, LayoutTemplate, History } from "lucide-react";
 import { useWorkoutHistory } from "../hooks/useWorkoutHistory";
 import { useWorkoutTemplates } from "../hooks/useWorkoutTemplates";
 import { useWorkoutScheduling } from "../hooks/useWorkoutScheduling";
@@ -9,12 +10,17 @@ import { WorkoutHistoryView } from "../features/workout/components/WorkoutHistor
 import { WorkoutTemplatesView } from "../features/workout/components/WorkoutTemplatesView";
 import { SaveTemplateModal } from "../features/workout/components/SaveTemplateModal";
 import { ScheduleWorkoutModal } from "../features/workout/components/ScheduleWorkoutModal";
-import { SplitSelectionView } from "../features/workout/components/SplitSelectionView";
 import { CustomSplitConfiguration } from "../features/workout/components/CustomSplitConfiguration";
 import { GeneratedScheduleView } from "../features/workout/components/GeneratedScheduleView";
 import type { CompletedWorkout } from "../services/storage/WorkoutRepository";
 import type { WorkoutTemplate } from "../services/storage/WorkoutTemplateRepository";
 import type { WorkoutSchedule } from "../features/workout/WorkoutGenerator";
+
+import { WorkoutBuilderView } from "../features/workout/WorkoutBuilderView";
+import type { MuscleGroup } from "../features/workout/ExerciseDatabase";
+import type { FocusLevel } from "../services/WorkoutService";
+
+// ... imports
 
 export default function WorkoutPage() {
 	const navigate = useNavigate();
@@ -57,10 +63,17 @@ export default function WorkoutPage() {
 	const [templateName, setTemplateName] = useState("");
 	const [showSchedule, setShowSchedule] = useState(false);
 	const [scheduleDate, setScheduleDate] = useState("");
+	const [showBuilder, setShowBuilder] = useState(false);
 
 	// Handlers
 	const handleGenerateSchedule = () => {
 		if (!selectedSplit) return;
+
+		if (selectedSplit === "custom") {
+			setShowBuilder(true);
+			return;
+		}
+
 		generate(
 			selectedSplit,
 			daysPerWeek,
@@ -69,6 +82,13 @@ export default function WorkoutPage() {
 			customDayColumns,
 			repRanges,
 		);
+	};
+
+	const handleBuilderComplete = (schedule: WorkoutSchedule) => {
+		setGeneratedSchedule(schedule);
+		setSelectedDayIndex(0);
+		setShowBuilder(false);
+		setSelectedSplit(null);
 	};
 
 	const handleStart = () => {
@@ -122,14 +142,21 @@ export default function WorkoutPage() {
 	};
 
 	const hasSelection =
-		customSplitType === "single"
-			? columns.high.length > 0 ||
-				columns.medium.length > 0 ||
-				columns.low.length > 0
-			: Object.values(customDayColumns).some(
-					(day) =>
-						day.high.length > 0 || day.medium.length > 0 || day.low.length > 0,
-				);
+		columns.high.length > 0 ||
+		columns.medium.length > 0 ||
+		columns.low.length > 0;
+
+	// Helper to extract focus from columns
+	const getInitialFocus = (): Partial<Record<MuscleGroup, FocusLevel>> => {
+		const focus: Partial<Record<MuscleGroup, FocusLevel>> = {};
+
+		// Always use global columns now
+		for (const m of columns.high) focus[m] = "high";
+		for (const m of columns.medium) focus[m] = "medium";
+		for (const m of columns.low) focus[m] = "low";
+
+		return focus;
+	};
 
 	if (showHistory) {
 		return (
@@ -141,42 +168,33 @@ export default function WorkoutPage() {
 		);
 	}
 
+	if (showBuilder) {
+		return (
+			<WorkoutBuilderView
+				initialDays={daysPerWeek}
+				initialFocus={getInitialFocus()}
+				onComplete={handleBuilderComplete}
+				onBack={() => setShowBuilder(false)}
+			/>
+		);
+	}
+
 	return (
 		<div className="h-full flex flex-col">
-			<header className="mb-4 flex-none flex justify-between items-end">
-				<div>
-					<h1 className="text-2xl font-bold">Workout Planner</h1>
-					<p className="text-zinc-400 text-sm">
-						{selectedSplit ? "Your workout plan" : "Choose your split"}
-					</p>
-				</div>
-				<div className="flex gap-3">
-					<button
-						type="button"
-						onClick={handleLoadTemplates}
-						className="text-sm text-green-400 hover:text-green-300"
-					>
-						Load Templates
-					</button>
-					<button
-						type="button"
-						onClick={handleLoadHistory}
-						className="text-sm text-blue-400 hover:text-blue-300"
-					>
-						Load History
-					</button>
-				</div>
+			<header className="mb-6 flex-none">
+				<h1 className="text-2xl font-bold">Workout Planner</h1>
+				<p className="text-zinc-400 text-sm">
+					{selectedSplit
+						? "Configure your split"
+						: "What would you like to do?"}
+				</p>
 			</header>
 
 			{!generatedSchedule ? (
 				selectedSplit === "custom" ? (
 					<CustomSplitConfiguration
-						customSplitType={customSplitType}
-						setCustomSplitType={setCustomSplitType}
 						daysPerWeek={daysPerWeek}
 						setDaysPerWeek={setDaysPerWeek}
-						currentCustomDay={currentCustomDay}
-						setCurrentCustomDay={setCurrentCustomDay}
 						repRanges={repRanges}
 						setRepRanges={setRepRanges}
 						currentColumns={getCurrentColumns()}
@@ -186,13 +204,55 @@ export default function WorkoutPage() {
 						hasSelection={hasSelection}
 					/>
 				) : (
-					<SplitSelectionView
-						selectedSplit={selectedSplit}
-						onSelectSplit={setSelectedSplit}
-						daysPerWeek={daysPerWeek}
-						setDaysPerWeek={setDaysPerWeek}
-						onGenerate={handleGenerateSchedule}
-					/>
+					<div className="flex-1 flex flex-col gap-4 p-4">
+						<button
+							type="button"
+							onClick={() => setSelectedSplit("custom")}
+							className="w-full p-6 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex flex-col items-start gap-2 hover:scale-[1.02] transition-transform"
+						>
+							<div className="p-2 bg-white/10 rounded-lg">
+								<Plus className="text-white" size={24} />
+							</div>
+							<div className="text-left">
+								<h3 className="text-lg font-bold text-white">
+									Create Custom Split
+								</h3>
+								<p className="text-blue-200 text-sm">
+									Build a program from scratch
+								</p>
+							</div>
+						</button>
+
+						<div className="grid grid-cols-2 gap-4">
+							<button
+								type="button"
+								onClick={handleLoadTemplates}
+								className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col items-start gap-3 hover:bg-zinc-800 transition-colors"
+							>
+								<div className="p-2 bg-green-500/10 rounded-lg">
+									<LayoutTemplate className="text-green-500" size={20} />
+								</div>
+								<div className="text-left">
+									<h3 className="font-medium text-zinc-200">Templates</h3>
+									<p className="text-zinc-500 text-xs">Saved programs</p>
+								</div>
+							</button>
+
+							<button
+								type="button"
+								onClick={handleLoadHistory}
+								className="p-4 bg-zinc-900 border border-zinc-800 rounded-2xl flex flex-col items-start gap-3 hover:bg-zinc-800 transition-colors"
+							>
+								<div className="p-2 bg-blue-500/10 rounded-lg">
+									<History className="text-blue-500" size={20} />
+								</div>
+								<div className="text-left">
+									<h3 className="font-medium text-zinc-200">History</h3>
+									<p className="text-zinc-500 text-xs">Past workouts</p>
+								</div>
+							</button>
+						</div>
+					</div>
 				)
 			) : (
 				<GeneratedScheduleView

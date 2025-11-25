@@ -8,13 +8,19 @@ import type { MuscleGroup } from "../features/workout/ExerciseDatabase";
 import type { FocusLevel } from "../services/WorkoutService";
 import type { ColumnId } from "./useCustomSplit";
 
+import { storage } from "../services/storage/LocalStorageAdapter";
+import { ExerciseRepository } from "../services/storage/ExerciseRepository";
+
+// ... imports
+
 export function useWorkoutGeneration() {
 	const [generatedSchedule, setGeneratedSchedule] =
 		useState<WorkoutSchedule | null>(null);
 	const [selectedDayIndex, setSelectedDayIndex] = useState(0);
 	const [selectedSplit, setSelectedSplit] = useState<SplitType | null>(null);
+	const [isGenerating, setIsGenerating] = useState(false);
 
-	const generate = (
+	const generate = async (
 		split: SplitType,
 		days: number,
 		customSplitType: "single" | "ppl" | "upper_lower" | "full_body",
@@ -25,6 +31,7 @@ export function useWorkoutGeneration() {
 			isolation: { min: number; max: number };
 		},
 	) => {
+		setIsGenerating(true);
 		let muscleFocus: Partial<Record<MuscleGroup, FocusLevel>> | undefined;
 		let multiDayFocus:
 			| Array<Partial<Record<MuscleGroup, FocusLevel>>>
@@ -38,7 +45,10 @@ export function useWorkoutGeneration() {
 				for (const m of columns.medium) muscleFocus[m] = "medium";
 				for (const m of columns.low) muscleFocus[m] = "low";
 
-				if (Object.keys(muscleFocus).length === 0) return;
+				if (Object.keys(muscleFocus).length === 0) {
+					setIsGenerating(false);
+					return;
+				}
 			} else {
 				// Multi-day custom - use customDayColumns
 				multiDayFocus = [];
@@ -54,19 +64,27 @@ export function useWorkoutGeneration() {
 					multiDayFocus.push(dayFocus);
 				}
 
-				if (multiDayFocus.length === 0) return;
+				if (multiDayFocus.length === 0) {
+					setIsGenerating(false);
+					return;
+				}
 			}
 		}
 
-		const schedule = generateSchedule(
+		const exerciseRepo = new ExerciseRepository(storage);
+		const allExercises = await exerciseRepo.getAllExercises();
+
+		const schedule = await generateSchedule(
 			split,
 			days,
+			allExercises,
 			muscleFocus,
 			multiDayFocus,
 			repRanges,
 		);
 		setGeneratedSchedule(schedule);
 		setSelectedDayIndex(0);
+		setIsGenerating(false);
 	};
 
 	const updateExerciseSets = (exerciseIndex: number, newSets: number) => {
@@ -107,5 +125,6 @@ export function useWorkoutGeneration() {
 		generate,
 		updateExerciseSets,
 		reset,
+		isGenerating,
 	};
 }

@@ -18,20 +18,25 @@ export class DietService {
 
 		// Calculate Base TDEE (Sedentary)
 		const baseBMR = calculateBMR(profile);
-		const sedentaryTDEE = Math.round(baseBMR * 1.2);
 
 		// Add active calories from steps and cardio
 		// Estimation: 0.04 kcal per step, 8 kcal per min of cardio (moderate)
 		const stepCalories = Math.round(todayActivity.steps * 0.04);
-		const cardioCalories = todayActivity.cardioMinutes * 8;
+		const cardioCalories = todayActivity.cardio * 8;
 
-		const totalTDEE = sedentaryTDEE + stepCalories + cardioCalories;
+		const totalTDEE = Math.round(
+			(baseBMR + stepCalories + cardioCalories) * profile.activityLevel,
+		);
+
+		const dailyCaloriesTarget = Math.round(totalTDEE * profile.goal);
 
 		return {
 			macros: calculateMacros(totalTDEE, profile.goal),
 			totalTDEE,
 			stepCalories,
+			dailyCaloriesTarget,
 			steps: todayActivity.steps,
+			estimatedDailySteps: profile.estimatedDailySteps,
 			logs: todayActivity.logs || [],
 		};
 	}
