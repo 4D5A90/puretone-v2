@@ -49,7 +49,7 @@ export const useUserStore = create<UserState>()(
 		{
 			name: "puretone-user-storage",
 			version: 1, // Increment this to force migration
-			migrate: (persistedState: any, version: number) => {
+			migrate: (persistedState: any) => {
 				// Migrate old profiles to include estimatedDailySteps
 				if (persistedState?.profile) {
 					const profile = persistedState.profile;

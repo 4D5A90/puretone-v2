@@ -1,9 +1,9 @@
+import { motion } from "framer-motion";
+import { Search, X } from "lucide-react";
 import type React from "react";
-import { useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { X, Search, Filter } from "lucide-react";
-import type { Exercise, MuscleGroup } from "../ExerciseDatabase";
+import { useMemo, useState } from "react";
 import { MUSCLE_GROUPS } from "../../../hooks/useCustomSplit";
+import type { Exercise, MuscleGroup } from "../ExerciseDatabase";
 
 interface ExercisePickerProps {
 	isOpen: boolean;

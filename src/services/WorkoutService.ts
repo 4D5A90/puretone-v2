@@ -1,12 +1,13 @@
-import type {
-	WorkoutRepository,
-	CompletedWorkout,
-} from "./storage/WorkoutRepository";
-import {
-	generateWorkout,
-	type WorkoutPlan,
-} from "../features/workout/WorkoutGenerator";
 import type { MuscleGroup } from "../features/workout/ExerciseDatabase";
+import { exerciseDatabase } from "../features/workout/ExerciseDatabase";
+import {
+	type WorkoutPlan,
+	generateWorkout,
+} from "../features/workout/WorkoutGenerator";
+import type {
+	CompletedWorkout,
+	WorkoutRepository,
+} from "./storage/WorkoutRepository";
 
 export type FocusLevel = "high" | "medium" | "low";
 
@@ -21,9 +22,11 @@ export class WorkoutService {
 		return this.workoutRepo.saveWorkout(workout);
 	}
 
-	generatePlan(muscleFocus: Record<MuscleGroup, FocusLevel>): WorkoutPlan {
+	async generatePlan(
+		muscleFocus: Record<MuscleGroup, FocusLevel>,
+	): Promise<WorkoutPlan> {
 		// Logic to adjust volume based on focus will go here
 		// For now, we wrap the existing generator
-		return generateWorkout(muscleFocus);
+		return generateWorkout(muscleFocus, exerciseDatabase);
 	}
 }

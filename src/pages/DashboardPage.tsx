@@ -1,51 +1,25 @@
-import { useEffect, useState, useCallback } from "react";
+import { Play } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useUserStore } from "../store/userStore";
-import { DietService } from "../services/DietService";
-import { ActivityRepository } from "../services/storage/ActivityRepository";
+import { useDailyTargets } from "../hooks/useDailyTargets";
 import { storage } from "../services/storage/LocalStorageAdapter";
 import {
-	ScheduledWorkoutRepository,
 	type ScheduledWorkout,
+	ScheduledWorkoutRepository,
 } from "../services/storage/ScheduledWorkoutRepository";
 import { WorkoutTemplateRepository } from "../services/storage/WorkoutTemplateRepository";
-import { Play } from "lucide-react";
+import { useUserStore } from "../store/userStore";
 
-const activityRepo = new ActivityRepository(storage);
-const dietService = new DietService(activityRepo);
 const scheduledRepo = new ScheduledWorkoutRepository(storage);
 const templateRepo = new WorkoutTemplateRepository(storage);
-
-import type { ActivityLog } from "../services/storage/ActivityRepository";
 
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const profile = useUserStore((state) => state.profile);
-	const [data, setData] = useState<{
-		macros: {
-			calories: number;
-			protein: number;
-			carbs: number;
-			fats: number;
-		};
-		totalTDEE: number;
-		dailyCaloriesTarget: number;
-		stepCalories: number;
-		steps: number;
-		estimatedDailySteps: number;
-		logs: ActivityLog[];
-	} | null>(null);
+	const { data, isLoading } = useDailyTargets();
 	const [todayWorkout, setTodayWorkout] = useState<ScheduledWorkout | null>(
 		null,
 	);
-
-	const loadTargets = useCallback(async () => {
-		if (profile) {
-			const targets = await dietService.getDailyTargets(profile);
-			console.log(targets);
-			setData(targets);
-		}
-	}, [profile]);
 
 	const loadTodayWorkout = useCallback(async () => {
 		const workout = await scheduledRepo.getTodayWorkout();
@@ -53,11 +27,10 @@ export default function DashboardPage() {
 	}, []);
 
 	useEffect(() => {
-		loadTargets();
 		loadTodayWorkout();
-	}, [loadTargets, loadTodayWorkout]);
+	}, [loadTodayWorkout]);
 
-	if (!profile || !data)
+	if (!profile || isLoading || !data)
 		return <div className="p-6 text-center text-zinc-400">Loading...</div>;
 
 	return (
@@ -98,11 +71,38 @@ export default function DashboardPage() {
 			)}
 
 			<div className="grid grid-cols-2 gap-4">
-				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
+				{/* <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
 					<p className="text-zinc-400 text-sm mb-1">TDEE</p>
 					<h2 className="text-4xl font-bold text-white">
 						{data.totalTDEE} <span className="text-lg text-zinc-500">kcal</span>
 					</h2>
+				</div> */}
+
+				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
+					<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
+					<h2 className="text-4xl font-bold text-white">
+						{data.dailyCaloriesTarget}
+						<span className="text-lg text-zinc-500">kcal</span>
+					</h2>
+				</div>
+				<div className="col-span-2">
+					<div className="grid grid-cols-3 gap-4">
+						<MacroCard
+							label="Protein"
+							amount={data.macros.protein}
+							color="bg-red-500"
+						/>
+						<MacroCard
+							label="Carbs"
+							amount={data.macros.carbs}
+							color="bg-yellow-500"
+						/>
+						<MacroCard
+							label="Fats"
+							amount={data.macros.fats}
+							color="bg-green-500"
+						/>
+					</div>
 				</div>
 
 				{/* Steps Progress */}
@@ -132,75 +132,6 @@ export default function DashboardPage() {
 						{Math.round((data.steps / data.estimatedDailySteps) * 100)}% of
 						daily goal
 					</p>
-				</div>
-
-				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
-					<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
-					<h2 className="text-4xl font-bold text-white">
-						{data.dailyCaloriesTarget}
-						<span className="text-lg text-zinc-500">kcal</span>
-					</h2>
-				</div>
-				<div className="col-span-2">
-					<div className="grid grid-cols-3 gap-4">
-						<MacroCard
-							label="Protein"
-							amount={data.macros.protein}
-							color="bg-red-500"
-						/>
-						<MacroCard
-							label="Carbs"
-							amount={data.macros.carbs}
-							color="bg-yellow-500"
-						/>
-						<MacroCard
-							label="Fats"
-							amount={data.macros.fats}
-							color="bg-green-500"
-						/>
-					</div>
-				</div>
-				<div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 col-span-2">
-					<div className="flex justify-between items-center mb-2">
-						<div>
-							<p className="text-zinc-400 text-xs">Activity</p>
-							<p className="text-xl font-bold text-white">{data.steps} steps</p>
-						</div>
-						<div className="text-right">
-							<p className="text-green-500 font-bold">
-								+{data.stepCalories} kcal
-							</p>
-						</div>
-					</div>
-
-					{data.logs.length > 0 && (
-						<div className="mt-4 space-y-2 border-t border-zinc-800 pt-4">
-							<p className="text-xs text-zinc-500 font-medium uppercase">
-								Today's Activity
-							</p>
-							<div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
-								{[...data.logs]
-									.reverse()
-									.slice(0, 5)
-									.map((log) => (
-										<div
-											key={log.id}
-											className="flex justify-between text-sm text-zinc-400 bg-zinc-950/50 p-2 rounded"
-										>
-											<span>
-												{new Date(log.timestamp).toLocaleTimeString([], {
-													hour: "2-digit",
-													minute: "2-digit",
-												})}
-											</span>
-											<span className="text-white">
-												+{log.amount} {log.type}
-											</span>
-										</div>
-									))}
-							</div>
-						</div>
-					)}
 				</div>
 			</div>
 		</div>

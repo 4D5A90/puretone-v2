@@ -1,26 +1,26 @@
+import clsx from "clsx";
+import {
+	Activity,
+	Calendar,
+	Footprints,
+	Pencil,
+	Ruler,
+	Save,
+	Target,
+	Trash2,
+	User,
+	Weight,
+	X,
+} from "lucide-react";
 import { useState } from "react";
 import {
-	useUserStore,
-	type UserProfile,
-	type ActivityLevelType,
-	type GoalType,
 	ActivityLevel,
+	type ActivityLevelType,
 	Goal,
+	type GoalType,
+	type UserProfile,
+	useUserStore,
 } from "../store/userStore";
-import {
-	User,
-	Ruler,
-	Weight,
-	Activity,
-	Target,
-	Calendar,
-	Pencil,
-	Save,
-	X,
-	Trash2,
-	Footprints,
-} from "lucide-react";
-import clsx from "clsx";
 
 const ACTIVITY_LABELS: Record<ActivityLevelType, string> = {
 	[ActivityLevel.Sedentary]: "Sedentary",
@@ -202,17 +202,22 @@ export default function ProfilePage() {
 					<div
 						key={item.label}
 						className={clsx(
-							"p-4 rounded-xl border flex flex-col gap-3 relative",
+							"p-3 rounded-xl border flex flex-col gap-1 relative",
 							item.bg,
 						)}
 					>
-						<div className={clsx("p-2 rounded-lg w-fit", "bg-zinc-900/50")}>
-							<item.icon size={20} className={item.color} />
-						</div>
-						<div className="flex-1 flex flex-col justify-end">
-							<p className="text-xs text-zinc-400 font-medium uppercase tracking-wider mb-1">
+						{/* Icon + Label horizontally */}
+						<div className="flex items-center gap-2">
+							<div className={clsx("p-1.5 rounded-lg", "bg-zinc-900/50")}>
+								<item.icon size={16} className={item.color} />
+							</div>
+							<p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">
 								{item.label}
 							</p>
+						</div>
+
+						{/* Value below, aligned with icon */}
+						<div className="mt-2 pl-1">
 							{isEditing ? (
 								item.type === "select" ? (
 									<select

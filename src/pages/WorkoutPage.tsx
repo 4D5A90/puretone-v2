@@ -1,23 +1,23 @@
+import { History, LayoutTemplate, Plus } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, LayoutTemplate, History } from "lucide-react";
-import { useWorkoutHistory } from "../hooks/useWorkoutHistory";
-import { useWorkoutTemplates } from "../hooks/useWorkoutTemplates";
-import { useWorkoutScheduling } from "../hooks/useWorkoutScheduling";
-import { useCustomSplit } from "../hooks/useCustomSplit";
-import { useWorkoutGeneration } from "../hooks/useWorkoutGeneration";
-import { WorkoutHistoryView } from "../features/workout/components/WorkoutHistoryView";
-import { WorkoutTemplatesView } from "../features/workout/components/WorkoutTemplatesView";
-import { SaveTemplateModal } from "../features/workout/components/SaveTemplateModal";
-import { ScheduleWorkoutModal } from "../features/workout/components/ScheduleWorkoutModal";
+import type { WorkoutSchedule } from "../features/workout/WorkoutGenerator";
 import { CustomSplitConfiguration } from "../features/workout/components/CustomSplitConfiguration";
 import { GeneratedScheduleView } from "../features/workout/components/GeneratedScheduleView";
+import { SaveTemplateModal } from "../features/workout/components/SaveTemplateModal";
+import { ScheduleWorkoutModal } from "../features/workout/components/ScheduleWorkoutModal";
+import { WorkoutHistoryView } from "../features/workout/components/WorkoutHistoryView";
+import { WorkoutTemplatesView } from "../features/workout/components/WorkoutTemplatesView";
+import { useCustomSplit } from "../hooks/useCustomSplit";
+import { useWorkoutGeneration } from "../hooks/useWorkoutGeneration";
+import { useWorkoutHistory } from "../hooks/useWorkoutHistory";
+import { useWorkoutScheduling } from "../hooks/useWorkoutScheduling";
+import { useWorkoutTemplates } from "../hooks/useWorkoutTemplates";
 import type { CompletedWorkout } from "../services/storage/WorkoutRepository";
 import type { WorkoutTemplate } from "../services/storage/WorkoutTemplateRepository";
-import type { WorkoutSchedule } from "../features/workout/WorkoutGenerator";
 
-import { WorkoutBuilderView } from "../features/workout/WorkoutBuilderView";
 import type { MuscleGroup } from "../features/workout/ExerciseDatabase";
+import { WorkoutBuilderView } from "../features/workout/WorkoutBuilderView";
 import type { FocusLevel } from "../services/WorkoutService";
 
 // ... imports
@@ -31,11 +31,8 @@ export default function WorkoutPage() {
 	const { scheduleWorkout } = useWorkoutScheduling();
 	const {
 		customSplitType,
-		setCustomSplitType,
 		daysPerWeek,
 		setDaysPerWeek,
-		currentCustomDay,
-		setCurrentCustomDay,
 		repRanges,
 		setRepRanges,
 		columns,

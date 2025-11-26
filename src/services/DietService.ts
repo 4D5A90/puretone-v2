@@ -1,8 +1,8 @@
-import type { UserProfile } from "../store/userStore";
 import {
 	calculateBMR,
 	calculateMacros,
 } from "../features/onboarding/dietUtils";
+import type { UserProfile } from "../store/userStore";
 import type { ActivityRepository } from "./storage/ActivityRepository";
 
 export class DietService {
@@ -31,7 +31,7 @@ export class DietService {
 		const dailyCaloriesTarget = Math.round(totalTDEE * profile.goal);
 
 		return {
-			macros: calculateMacros(totalTDEE, profile.goal),
+			macros: calculateMacros(dailyCaloriesTarget, profile.weight),
 			totalTDEE,
 			stepCalories,
 			dailyCaloriesTarget,

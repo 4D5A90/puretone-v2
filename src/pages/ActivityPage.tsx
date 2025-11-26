@@ -1,58 +1,82 @@
-import { useState, useEffect, useCallback } from "react";
-import { Flame, Footprints, GlassWater, Save } from "lucide-react";
+import { Flame, Footprints, GlassWater, PlusCircle, X } from "lucide-react";
+import { useState } from "react";
+import { useDailyTargets } from "../hooks/useDailyTargets";
+import {
+	ActivityMapping,
+	ActivityRepository,
+	type ActivityType,
+} from "../services/storage/ActivityRepository";
 import { storage } from "../services/storage/LocalStorageAdapter";
-import { ActivityRepository } from "../services/storage/ActivityRepository";
 
 const activityRepo = new ActivityRepository(storage);
 
+type ActivityConfig = {
+	type: ActivityType;
+	label: string;
+	icon: typeof Footprints;
+	color: string;
+	bgColor: string;
+	unit: string;
+};
+
+const activities: ActivityConfig[] = [
+	{
+		type: "steps",
+		label: "Steps",
+		icon: Footprints,
+		color: "text-green-500",
+		bgColor: "bg-green-500/20",
+		unit: "steps",
+	},
+	{
+		type: "cardio",
+		label: "Cardio",
+		icon: Flame,
+		color: "text-orange-500",
+		bgColor: "bg-orange-500/20",
+		unit: "mins",
+	},
+	{
+		type: "water",
+		label: "Water",
+		icon: GlassWater,
+		color: "text-indigo-500",
+		bgColor: "bg-indigo-500/20",
+		unit: "cl",
+	},
+];
+
 export default function ActivityPage() {
-	const [stepsToAdd, setStepsToAdd] = useState("");
-	const [cardioToAdd, setCardioToAdd] = useState("");
-	const [waterToAdd, setWaterToAdd] = useState("");
-	const [todayActivity, setTodayActivity] = useState({
-		steps: 0,
-		cardio: 0,
-		water: 0,
-	});
+	const [selectedActivity, setSelectedActivity] =
+		useState<ActivityConfig | null>(null);
+	const [inputValue, setInputValue] = useState("");
+	const { data, reload } = useDailyTargets();
 
-	const loadToday = useCallback(async () => {
-		const today = await activityRepo.getTodayActivity();
-		setTodayActivity({
-			steps: today.steps,
-			cardio: today.cardio,
-			water: today.water,
-		});
-	}, []);
-
-	useEffect(() => {
-		loadToday();
-	}, [loadToday]);
-
-	const handleAddSteps = async () => {
-		const amount = Number.parseInt(stepsToAdd);
-		if (Number.isNaN(amount) || amount <= 0) return;
-
-		await activityRepo.addActivity("steps", amount);
-		setStepsToAdd("");
-		loadToday();
+	const todayActivity = {
+		steps: data?.steps ?? 0,
+		cardio: 0, // Will need to be added to DietService
+		water: 0, // Will need to be added to DietService
 	};
 
-	const handleAddCardio = async () => {
-		const amount = Number.parseInt(cardioToAdd);
+	const handleAddActivity = async () => {
+		if (!selectedActivity) return;
+		const amount = Number.parseInt(inputValue);
 		if (Number.isNaN(amount) || amount <= 0) return;
 
-		await activityRepo.addActivity("cardio", amount);
-		setCardioToAdd("");
-		loadToday();
+		await activityRepo.addActivity(selectedActivity.type, amount);
+		setInputValue("");
+		setSelectedActivity(null);
+		reload();
 	};
 
-	const handleAddWater = async () => {
-		const amount = Number.parseInt(waterToAdd);
-		if (Number.isNaN(amount) || amount <= 0) return;
+	const openModal = (activity: ActivityConfig) => {
+		setSelectedActivity(activity);
+		setInputValue("");
+	};
 
-		await activityRepo.addActivity("water", amount);
-		setWaterToAdd("");
-		loadToday();
+	const closeModal = () => {
+		setSelectedActivity(null);
+		setInputValue("");
 	};
 
 	return (
@@ -62,100 +86,130 @@ export default function ActivityPage() {
 				<p className="text-zinc-400 text-sm">Log your daily movement</p>
 			</header>
 
-			<div className="flex gap-4 flex-col md:flex-row">
-				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-					<div className="flex items-center gap-3 mb-4">
-						<div className="p-2 bg-green-500/20 rounded-lg text-green-500">
-							<Footprints size={24} />
-						</div>
-						<div className="flex-1">
-							<h2 className="font-bold text-lg">Steps</h2>
-							<p className="text-sm text-zinc-400">
-								Today: {todayActivity.steps} steps
-							</p>
-						</div>
-					</div>
+			{/* Activity Cards Grid */}
+			<div className="grid grid-cols-3 gap-4">
+				{activities.map((activity) => {
+					const Icon = activity.icon;
 
-					<div className="flex items-center gap-2">
-						<input
-							type="number"
-							value={stepsToAdd}
-							onChange={(e) => setStepsToAdd(e.target.value)}
-							placeholder="Add steps..."
-							className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-lg font-bold text-center outline-none focus:border-blue-500 transition-colors"
-						/>
+					return (
 						<button
+							key={activity.type}
 							type="button"
-							onClick={handleAddSteps}
-							className="bg-green-600 hover:bg-green-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
+							onClick={() => openModal(activity)}
+							className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col items-center justify-center gap-2 aspect-square"
 						>
-							<Save size={20} />
-						</button>
-					</div>
-				</div>
-
-				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-					<div className="flex items-center gap-3 mb-4">
-						<div className="p-2 bg-orange-500/20 rounded-lg text-orange-500">
-							<Flame size={24} />
-						</div>
-						<div className="flex-1">
-							<h2 className="font-bold text-lg">Cardio</h2>
-							<p className="text-sm text-zinc-400">
-								Today: {todayActivity.cardio} mins
+							<div className={`p-3 ${activity.bgColor} rounded-xl`}>
+								<Icon size={32} className={activity.color} />
+							</div>
+							<p className="text-xs text-zinc-500 uppercase tracking-wider">
+								{activity.label}
 							</p>
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<input
-							type="number"
-							value={cardioToAdd}
-							onChange={(e) => setCardioToAdd(e.target.value)}
-							placeholder="Add minutes..."
-							className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-lg font-bold text-center outline-none focus:border-orange-500 transition-colors"
-						/>
-						<button
-							type="button"
-							onClick={handleAddCardio}
-							className="bg-orange-600 hover:bg-orange-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
-						>
-							<Save size={20} />
 						</button>
-					</div>
-				</div>
-
-				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800">
-					<div className="flex items-center gap-3 mb-4">
-						<div className="p-2 bg-indigo-500/20 rounded-lg text-indigo-500">
-							<GlassWater size={24} />
-						</div>
-						<div className="flex-1">
-							<h2 className="font-bold text-lg">Water</h2>
-							<p className="text-sm text-zinc-400">
-								Today: {todayActivity.water} cl
-							</p>
-						</div>
-					</div>
-
-					<div className="flex items-center gap-2">
-						<input
-							type="number"
-							value={waterToAdd}
-							onChange={(e) => setWaterToAdd(e.target.value)}
-							placeholder="Add litres..."
-							className="flex-1 bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-lg font-bold text-center outline-none focus:border-orange-500 transition-colors"
-						/>
-						<button
-							type="button"
-							onClick={handleAddWater}
-							className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-6 py-3 rounded-xl transition-colors"
-						>
-							<Save size={20} />
-						</button>
-					</div>
-				</div>
+					);
+				})}
 			</div>
+
+			<div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
+				<div className="flex justify-between items-center mb-2">
+					<div>
+						<p className="text-zinc-400 text-xs">Activity</p>
+						<p className="text-xl font-bold text-white">
+							{data?.steps ?? 0} steps
+						</p>
+					</div>
+					<div className="text-right">
+						<p className="text-green-500 font-bold">
+							+{data?.stepCalories ?? 0} kcal
+						</p>
+					</div>
+				</div>
+
+				{data && data.logs.length > 0 && (
+					<div className="mt-4 space-y-2 border-t border-zinc-800 pt-4">
+						<p className="text-xs text-zinc-500 font-medium uppercase">
+							Today's Activity
+						</p>
+						<div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
+							{[...data.logs]
+								.reverse()
+								.slice(0, 5)
+								.map((log) => (
+									<div
+										key={log.id}
+										className="flex justify-between text-sm text-zinc-400 bg-zinc-950/50 p-2 rounded"
+									>
+										<span>
+											{new Date(log.timestamp).toLocaleTimeString([], {
+												hour: "2-digit",
+												minute: "2-digit",
+											})}
+										</span>
+										<span className="text-white">
+											+{log.amount}{" "}
+											{
+												ActivityMapping[
+													log.type as keyof typeof ActivityMapping
+												]
+											}
+										</span>
+									</div>
+								))}
+						</div>
+					</div>
+				)}
+			</div>
+
+			{/* Modal */}
+			{selectedActivity && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+					<div className="bg-zinc-900 w-full max-w-md rounded-2xl border border-zinc-800 p-6">
+						<div className="flex items-center justify-between mb-6">
+							<div className="flex items-center gap-3">
+								<div className={`p-2 ${selectedActivity.bgColor} rounded-lg`}>
+									<selectedActivity.icon
+										size={24}
+										className={selectedActivity.color}
+									/>
+								</div>
+								<div>
+									<h2 className="text-lg font-bold text-white">
+										Add {selectedActivity.label}
+									</h2>
+									<p className="text-sm text-zinc-400">
+										Today: {todayActivity[selectedActivity.type]}{" "}
+										{selectedActivity.unit}
+									</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={closeModal}
+								className="text-zinc-400 hover:text-white transition-colors"
+							>
+								<X size={24} />
+							</button>
+						</div>
+
+						<div className="space-y-3">
+							<input
+								type="number"
+								value={inputValue}
+								onChange={(e) => setInputValue(e.target.value)}
+								onKeyDown={(e) => e.key === "Enter" && handleAddActivity()}
+								className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-4 text-2xl font-bold text-center outline-none focus:border-blue-500 transition-colors text-white"
+							/>
+							<button
+								type="button"
+								onClick={handleAddActivity}
+								className={`w-full ${selectedActivity.color.replace("text-", "bg-").replace("-500", "-600")} hover:opacity-90 text-white font-bold py-3 rounded-xl transition-opacity flex items-center justify-center gap-2`}
+							>
+								<PlusCircle size={20} />
+								<span>Add {selectedActivity.label}</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

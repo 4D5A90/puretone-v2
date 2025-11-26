@@ -1,15 +1,17 @@
 import type { StorageInterface } from "./StorageInterface";
 
-export const ActivityType = {
+export const ActivityMapping = {
 	steps: "steps",
 	cardio: "min of cardio",
 	water: "cl of water",
 } as const;
 
+export type ActivityType = "steps" | "cardio" | "water";
+
 export interface ActivityLog {
 	id: string;
 	timestamp: string;
-	type: keyof typeof ActivityType;
+	type: ActivityType;
 	amount: number;
 }
 
@@ -41,8 +43,16 @@ export class ActivityRepository {
 		return this.storage.setItem(this.getKey(activity.date), activity);
 	}
 
+	private getTodayDate(): string {
+		const now = new Date();
+		const year = now.getFullYear();
+		const month = String(now.getMonth() + 1).padStart(2, "0");
+		const day = String(now.getDate()).padStart(2, "0");
+		return `${year}-${month}-${day}`;
+	}
+
 	async getTodayActivity(): Promise<DailyActivity> {
-		const today = new Date().toISOString().split("T")[0];
+		const today = this.getTodayDate();
 		const activity = await this.getActivity(today);
 		return (
 			activity || {
@@ -55,10 +65,7 @@ export class ActivityRepository {
 		);
 	}
 
-	async addActivity(
-		type: "steps" | "cardio" | "water",
-		amount: number,
-	): Promise<void> {
+	async addActivity(type: ActivityType, amount: number): Promise<void> {
 		const today = await this.getTodayActivity();
 		const log: ActivityLog = {
 			id: crypto.randomUUID(),

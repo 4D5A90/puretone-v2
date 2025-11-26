@@ -14,20 +14,23 @@ export const calculateTDEE = (profile: UserProfile): number => {
 	return Math.round(bmr * profile.activityLevel);
 };
 
-export const calculateMacros = (tdee: number, goal: UserProfile["goal"]) => {
-	const targetCalories = Math.round(tdee * goal);
+export const calculateMacros = (targetCalories: number, weight: number) => {
+	// Fat: 1g per kg bodyweight (9 cal/g)
+	const fats = weight;
+	const fatCalories = fats * 9;
 
-	// Standard split: 30% P, 35% C, 35% F (adjustable)
-	// Protein: 4 cal/g, Carbs: 4 cal/g, Fat: 9 cal/g
+	// Remaining calories for protein and carbs
+	const remainingCalories = targetCalories - fatCalories;
 
-	const protein = Math.round((targetCalories * 0.3) / 4);
-	const carbs = Math.round((targetCalories * 0.35) / 4);
-	const fats = Math.round((targetCalories * 0.35) / 9);
+	// Protein: 30% of remaining calories (4 cal/g)
+	// Carbs: 70% of remaining calories (4 cal/g)
+	const protein = Math.round((remainingCalories * 0.3) / 4);
+	const carbs = Math.round((remainingCalories * 0.7) / 4);
 
 	return {
 		calories: targetCalories,
 		protein,
 		carbs,
-		fats,
+		fats: Math.round(fats),
 	};
 };
