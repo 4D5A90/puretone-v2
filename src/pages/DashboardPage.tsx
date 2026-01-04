@@ -16,7 +16,7 @@ const templateRepo = new WorkoutTemplateRepository(storage);
 export default function DashboardPage() {
 	const navigate = useNavigate();
 	const profile = useUserStore((state) => state.profile);
-	const { data, isLoading } = useDailyTargets();
+	const { targets, isLoading } = useDailyTargets();
 	const [todayWorkout, setTodayWorkout] = useState<ScheduledWorkout | null>(
 		null,
 	);
@@ -30,7 +30,7 @@ export default function DashboardPage() {
 		loadTodayWorkout();
 	}, [loadTodayWorkout]);
 
-	if (!profile || isLoading || !data)
+	if (!profile || isLoading || !targets)
 		return <div className="p-6 text-center text-zinc-400">Loading...</div>;
 
 	return (
@@ -71,37 +71,32 @@ export default function DashboardPage() {
 			)}
 
 			<div className="grid grid-cols-2 gap-4">
-				{/* <div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
-					<p className="text-zinc-400 text-sm mb-1">TDEE</p>
-					<h2 className="text-4xl font-bold text-white">
-						{data.totalTDEE} <span className="text-lg text-zinc-500">kcal</span>
-					</h2>
-				</div> */}
-
 				<div className="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 col-span-2">
-					<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
-					<h2 className="text-4xl font-bold text-white">
-						{data.dailyCaloriesTarget}
-						<span className="text-lg text-zinc-500">kcal</span>
-					</h2>
+					<div className="flex items-center gap-6">
+						<div className="flex-1">
+							<p className="text-zinc-400 text-sm mb-1">Daily Target</p>
+							<h2 className="text-3xl font-bold text-white">
+								{targets.dailyCaloriesTarget}{" "}
+								<span className="text-base text-zinc-500">kcal</span>
+							</h2>
+						</div>
+
+						<div className="h-16 w-px bg-zinc-800" />
+
+						<div className="flex-1">
+							<p className="text-zinc-400 text-sm mb-1">TDEE</p>
+							<h2 className="text-3xl font-bold text-white">
+								{targets.totalTDEE}{" "}
+								<span className="text-base text-zinc-500">kcal</span>
+							</h2>
+						</div>
+					</div>
 				</div>
 				<div className="col-span-2">
 					<div className="grid grid-cols-3 gap-4">
-						<MacroCard
-							label="Protein"
-							amount={data.macros.protein}
-							color="bg-red-500"
-						/>
-						<MacroCard
-							label="Carbs"
-							amount={data.macros.carbs}
-							color="bg-yellow-500"
-						/>
-						<MacroCard
-							label="Fats"
-							amount={data.macros.fats}
-							color="bg-green-500"
-						/>
+						<MacroCard label="Protein" amount={targets.macros.protein} />
+						<MacroCard label="Carbs" amount={targets.macros.carbs} />
+						<MacroCard label="Fats" amount={targets.macros.fats} />
 					</div>
 				</div>
 
@@ -110,27 +105,27 @@ export default function DashboardPage() {
 					<div className="flex justify-between items-center mb-3">
 						<p className="text-zinc-400 text-sm">Daily Steps</p>
 						<p className="text-sm font-medium text-white">
-							{data.steps.toLocaleString()} /{" "}
-							{data.estimatedDailySteps?.toLocaleString()}
+							{targets.steps.toLocaleString()} /{" "}
+							{targets.estimatedDailySteps?.toLocaleString()}
 						</p>
 					</div>
 					<div className="h-3 bg-zinc-800 rounded-full overflow-hidden">
 						<div
 							className={`h-full transition-all duration-500 ${
-								data.steps >= data.estimatedDailySteps
+								targets.steps >= targets.estimatedDailySteps
 									? "bg-gradient-to-r from-green-500 to-emerald-500"
-									: data.steps >= data.estimatedDailySteps * 0.5
+									: targets.steps >= targets.estimatedDailySteps * 0.5
 										? "bg-gradient-to-r from-blue-500 to-cyan-500"
 										: "bg-gradient-to-r from-zinc-600 to-zinc-500"
 							}`}
 							style={{
-								width: `${Math.min((data.steps / data.estimatedDailySteps) * 100, 100)}%`,
+								width: `${Math.min((targets.steps / targets.estimatedDailySteps) * 100, 100)}%`,
 							}}
 						/>
 					</div>
 					<p className="text-xs text-zinc-500 mt-2">
-						{Math.round((data.steps / data.estimatedDailySteps) * 100)}% of
-						daily goal
+						{Math.round((targets.steps / targets.estimatedDailySteps) * 100)}%
+						of daily goal
 					</p>
 				</div>
 			</div>
@@ -138,18 +133,14 @@ export default function DashboardPage() {
 	);
 }
 
-function MacroCard({
-	label,
-	amount,
-	color,
-}: { label: string; amount: number; color: string }) {
+function MacroCard({ label, amount }: { label: string; amount: number }) {
 	return (
 		<div className="bg-zinc-900 rounded-xl p-4 border border-zinc-800">
 			<p className="text-zinc-400 text-xs mb-1">{label}</p>
-			<p className="text-xl font-bold mb-2">{amount}g</p>
-			<div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+			<p className="text-xl font-bold">{amount}g</p>
+			{/* <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
 				<div className={`h-full ${color} w-0`} />
-			</div>
+			</div> */}
 		</div>
 	);
 }

@@ -1,4 +1,4 @@
-import ProfileForm from "../features/onboarding/ProfileForm";
+import OnboardingForm from "../features/onboarding/OnboardingForm";
 
 export default function OnboardingPage() {
 	return (
@@ -10,7 +10,7 @@ export default function OnboardingPage() {
 					</h1>
 					<p className="text-zinc-400">Your personal fitness architect</p>
 				</div>
-				<ProfileForm />
+				<OnboardingForm />
 			</div>
 		</div>
 	);

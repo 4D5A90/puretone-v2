@@ -1,12 +1,51 @@
-import type { UserProfile } from "../../store/userStore";
+import {
+	MetabolismAlgorithm,
+	type MetabolismAlgorithmType,
+	type UserProfile,
+} from "../../store/userStore";
 
-export const calculateBMR = (profile: UserProfile): number => {
+// Mifflin-St Jeor Equation (most accurate for general population)
+export const calculateBMRMifflinStJeor = (profile: UserProfile): number => {
 	const { weight, height, age, gender } = profile;
-	// Mifflin-St Jeor Equation
 	if (gender === "male") {
 		return 10 * weight + 6.25 * height - 5 * age + 5;
 	}
 	return 10 * weight + 6.25 * height - 5 * age - 161;
+};
+
+// Harris-Benedict Equation (classic formula)
+export const calculateBMRHarrisBenedict = (profile: UserProfile): number => {
+	const { weight, height, age, gender } = profile;
+	if (gender === "male") {
+		return 88.362 + 13.397 * weight + 4.799 * height - 5.677 * age;
+	}
+	return 447.593 + 9.247 * weight + 3.098 * height - 4.33 * age;
+};
+
+// Katch-McArdle Equation (based on lean body mass)
+// Uses estimated body fat % since we don't have actual measurements
+export const calculateBMRKatchMcArdle = (profile: UserProfile): number => {
+	const { weight, gender } = profile;
+	// Estimate body fat % based on gender (average values)
+	const estimatedBodyFatPercent = gender === "male" ? 0.15 : 0.25;
+	const leanBodyMass = weight * (1 - estimatedBodyFatPercent);
+	return 370 + 21.6 * leanBodyMass;
+};
+
+export const calculateBMR = (
+	profile: UserProfile,
+	algorithm?: MetabolismAlgorithmType,
+): number => {
+	const selectedAlgorithm = algorithm || profile.metabolismAlgorithm;
+
+	switch (selectedAlgorithm) {
+		case MetabolismAlgorithm.HarrisBenedict:
+			return calculateBMRHarrisBenedict(profile);
+		case MetabolismAlgorithm.KatchMcArdle:
+			return calculateBMRKatchMcArdle(profile);
+		case MetabolismAlgorithm.MifflinStJeor:
+			return calculateBMRMifflinStJeor(profile);
+	}
 };
 
 export const calculateTDEE = (profile: UserProfile): number => {

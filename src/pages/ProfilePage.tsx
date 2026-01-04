@@ -1,7 +1,7 @@
-import clsx from "clsx";
 import {
 	Activity,
 	Calendar,
+	ChevronDown,
 	Footprints,
 	Pencil,
 	Ruler,
@@ -16,8 +16,9 @@ import { useState } from "react";
 import {
 	ActivityLevel,
 	type ActivityLevelType,
-	Goal,
-	type GoalType,
+	type Goal,
+	MetabolismAlgorithm,
+	type MetabolismAlgorithmType,
 	type UserProfile,
 	useUserStore,
 } from "../store/userStore";
@@ -30,10 +31,26 @@ const ACTIVITY_LABELS: Record<ActivityLevelType, string> = {
 	[ActivityLevel.VeryActive]: "Very Active",
 };
 
-const GOAL_LABELS: Record<GoalType, string> = {
-	[Goal.Cut]: "Cut",
-	[Goal.Maintain]: "Maintain",
-	[Goal.Bulk]: "Bulk",
+const GOAL_LABELS: Record<Goal, string> = {
+	cut: "Cut",
+	maintain: "Maintain",
+	bulk: "Bulk",
+};
+
+const METABOLISM_ALGORITHM_LABELS: Record<MetabolismAlgorithmType, string> = {
+	[MetabolismAlgorithm.MifflinStJeor]: "Mifflin-St Jeor",
+	[MetabolismAlgorithm.HarrisBenedict]: "Harris-Benedict",
+	[MetabolismAlgorithm.KatchMcArdle]: "Katch-McArdle",
+};
+
+const METABOLISM_ALGORITHM_DESCRIPTIONS: Record<
+	MetabolismAlgorithmType,
+	string
+> = {
+	[MetabolismAlgorithm.MifflinStJeor]:
+		"Most accurate for general population (recommended)",
+	[MetabolismAlgorithm.HarrisBenedict]: "Classic formula, slightly higher",
+	[MetabolismAlgorithm.KatchMcArdle]: "Based on lean body mass estimation",
 };
 
 export default function ProfilePage() {
@@ -41,6 +58,7 @@ export default function ProfilePage() {
 	const profile = userStore.profile;
 	const [isEditing, setIsEditing] = useState(false);
 	const [editForm, setEditForm] = useState<UserProfile | null>(null);
+	const [isAdvancedOpen, setIsAdvancedOpen] = useState(false);
 
 	if (!profile) return null;
 
@@ -153,9 +171,9 @@ export default function ProfilePage() {
 			value: GOAL_LABELS[profile.goal],
 			editValue: editForm?.goal,
 			type: "select",
-			options: Object.values(Goal).map((val) => ({
-				value: val,
-				label: GOAL_LABELS[val as GoalType],
+			options: Object.keys(profile.goalValues).map((key) => ({
+				value: key,
+				label: GOAL_LABELS[key as Goal],
 			})),
 			icon: Target,
 			color: "text-yellow-500",
@@ -197,27 +215,20 @@ export default function ProfilePage() {
 					</div>
 				)}
 			</header>
-			<div className="grid grid-cols-2 gap-4">
+			<div className="bg-zinc-900 rounded-2xl border border-zinc-800 divide-y divide-zinc-800">
 				{items.map((item) => (
 					<div
 						key={item.label}
-						className={clsx(
-							"p-3 rounded-xl border flex flex-col gap-1 relative",
-							item.bg,
-						)}
+						className="p-2 flex items-center justify-between gap-4"
 					>
-						{/* Icon + Label horizontally */}
-						<div className="flex items-center gap-2">
-							<div className={clsx("p-1.5 rounded-lg", "bg-zinc-900/50")}>
-								<item.icon size={16} className={item.color} />
-							</div>
-							<p className="text-xs text-zinc-400 font-medium uppercase tracking-wider">
-								{item.label}
-							</p>
+						{/* Left: Icon + Label */}
+						<div className="flex items-center gap-3">
+							<item.icon size={18} className={item.color} />
+							<p className="text-sm text-zinc-300 font-medium">{item.label}</p>
 						</div>
 
-						{/* Value below, aligned with icon */}
-						<div className="mt-2 pl-1">
+						{/* Right: Value (editable) */}
+						<div className="flex-shrink-0">
 							{isEditing ? (
 								item.type === "select" ? (
 									<select
@@ -235,7 +246,7 @@ export default function ProfilePage() {
 													: null,
 											)
 										}
-										className="w-full bg-zinc-900/80 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+										className="bg-zinc-800 border border-zinc-700 rounded-lg px-3  text-sm text-white focus:outline-none focus:border-blue-500"
 									>
 										{item.options?.map((opt) => (
 											<option key={opt.value} value={opt.value}>
@@ -254,15 +265,163 @@ export default function ProfilePage() {
 													: null,
 											)
 										}
-										className="w-full bg-zinc-900/80 border border-zinc-700 rounded px-2 py-1 text-sm text-white focus:outline-none focus:border-blue-500"
+										className="bg-zinc-800 border border-zinc-700 rounded-lg px-3  text-sm text-white text-right w-24 focus:outline-none focus:border-blue-500"
 									/>
 								)
 							) : (
-								<p className="text-lg font-bold text-white">{item.value}</p>
+								<p className="text-base font-semibold text-white">
+									{item.value}
+								</p>
 							)}
 						</div>
 					</div>
 				))}
+			</div>
+
+			{/* Advanced Options Accordion */}
+			<div className="mt-6">
+				<button
+					type="button"
+					onClick={() => setIsAdvancedOpen(!isAdvancedOpen)}
+					className="w-full bg-zinc-900 rounded-2xl border border-zinc-800 p-4 flex items-center justify-between hover:bg-zinc-800/50 transition-colors"
+				>
+					<div className="flex items-center gap-3">
+						<div className="p-2 bg-purple-500/10 rounded-lg border border-purple-500/20">
+							<Target size={18} className="text-purple-500" />
+						</div>
+						<div className="text-left">
+							<h2 className="text-base font-semibold text-white">
+								Advanced Options
+							</h2>
+							<p className="text-xs text-zinc-400">
+								Goal type & metabolism algorithm
+							</p>
+						</div>
+					</div>
+					<ChevronDown
+						size={20}
+						className={`text-zinc-400 transition-transform ${
+							isAdvancedOpen ? "rotate-180" : ""
+						}`}
+					/>
+				</button>
+
+				{isAdvancedOpen && (
+					<div className="mt-2 bg-zinc-900 rounded-2xl border border-zinc-800 divide-y divide-zinc-800">
+						{/* Goal Values */}
+						<div className="p-3">
+							<div className="flex items-center gap-2 mb-2">
+								<Target size={16} className="text-yellow-500" />
+								<p className="text-sm text-zinc-300 font-medium">
+									Goal Multipliers
+								</p>
+							</div>
+							<div className="space-y-2">
+								{Object.keys(profile.goalValues).map((key) => {
+									const goalKey = key as Goal;
+									return (
+										<div
+											key={goalKey}
+											className="flex items-center justify-between gap-3"
+										>
+											<label className="text-xs text-zinc-400 capitalize">
+												{GOAL_LABELS[goalKey]}
+											</label>
+											{isEditing ? (
+												<input
+													type="number"
+													step="0.05"
+													min="0.5"
+													max="1.5"
+													value={editForm?.goalValues[goalKey]}
+													onChange={(e) =>
+														setEditForm((prev) =>
+															prev
+																? {
+																		...prev,
+																		goalValues: {
+																			...prev.goalValues,
+																			[goalKey]: Number(e.target.value),
+																		},
+																	}
+																: null,
+														)
+													}
+													className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white text-right w-16 focus:outline-none focus:border-blue-500"
+												/>
+											) : (
+												<span className="text-xs font-semibold text-white">
+													{profile.goalValues[goalKey]}x
+												</span>
+											)}
+										</div>
+									);
+								})}
+							</div>
+						</div>
+
+						{/* Metabolism Algorithm */}
+						<div className="p-3">
+							<div className="flex items-center gap-2 mb-2">
+								<Activity size={16} className="text-purple-500" />
+								<p className="text-sm text-zinc-300 font-medium">
+									Metabolism Algorithm
+								</p>
+							</div>
+							{!isEditing && (
+								<>
+									<p className="text-xs font-semibold text-white mb-1">
+										{METABOLISM_ALGORITHM_LABELS[profile.metabolismAlgorithm]}
+									</p>
+									<p className="text-xs text-zinc-400">
+										{
+											METABOLISM_ALGORITHM_DESCRIPTIONS[
+												profile.metabolismAlgorithm
+											]
+										}
+									</p>
+								</>
+							)}
+							{isEditing && (
+								<>
+									<select
+										value={editForm?.metabolismAlgorithm}
+										onChange={(e) =>
+											setEditForm((prev) =>
+												prev
+													? {
+															...prev,
+															metabolismAlgorithm: e.target
+																.value as MetabolismAlgorithmType,
+														}
+													: null,
+											)
+										}
+										className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-xs text-white focus:outline-none focus:border-blue-500 mb-1"
+									>
+										{Object.values(MetabolismAlgorithm).map((val) => (
+											<option key={val} value={val}>
+												{
+													METABOLISM_ALGORITHM_LABELS[
+														val as MetabolismAlgorithmType
+													]
+												}
+											</option>
+										))}
+									</select>
+									<p className="text-xs text-zinc-400">
+										{
+											METABOLISM_ALGORITHM_DESCRIPTIONS[
+												(editForm?.metabolismAlgorithm ||
+													profile.metabolismAlgorithm) as MetabolismAlgorithmType
+											]
+										}
+									</p>
+								</>
+							)}
+						</div>
+					</div>
+				)}
 			</div>
 
 			{/* Reset Button - For Testing */}

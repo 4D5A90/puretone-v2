@@ -1,13 +1,14 @@
+import clsx from "clsx";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-	useUserStore,
-	type UserProfile,
-	type ActivityLevelType,
 	ActivityLevel,
+	type ActivityLevelType,
 	Goal,
+	MetabolismAlgorithm,
+	type UserProfile,
+	useUserStore,
 } from "../../store/userStore";
-import clsx from "clsx";
 
 export default function ProfileForm() {
 	const navigate = useNavigate();
@@ -22,8 +23,9 @@ export default function ProfileForm() {
 		weight: 70,
 		gender: "male",
 		activityLevel: ActivityLevel.Moderate,
-		goal: Goal.Maintain,
+		goal: Goal.maintain,
 		estimatedDailySteps: 10000,
+		metabolismAlgorithm: MetabolismAlgorithm.MifflinStJeor,
 	});
 
 	const handleSubmit = (e: React.FormEvent) => {
@@ -201,30 +203,35 @@ export default function ProfileForm() {
 						Goal
 					</label>
 					<div className="grid grid-cols-3 gap-2">
-						{[
-							{ value: Goal.Cut, label: "Lose Fat" },
-							{ value: Goal.Maintain, label: "Maintain" },
-							{ value: Goal.Bulk, label: "Build Muscle" },
-						].map((option) => (
-							<button
-								key={option.value}
-								type="button"
-								onClick={() =>
-									setFormData({
-										...formData,
-										goal: option.value,
-									})
-								}
-								className={clsx(
-									"p-3 rounded-lg border text-sm transition-colors",
-									formData.goal === option.value
-										? "bg-blue-600 border-blue-500 text-white"
-										: "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800",
-								)}
-							>
-								{option.label}
-							</button>
-						))}
+						{Object.keys(Goal).map((key) => {
+							const goalKey = key as keyof typeof Goal;
+							const labels: Record<string, string> = {
+								cut: "Lose Fat",
+								maintain: "Maintain",
+								bulk: "Build Muscle",
+							};
+
+							return (
+								<button
+									key={key}
+									type="button"
+									onClick={() =>
+										setFormData({
+											...formData,
+											goal: Goal[goalKey],
+										})
+									}
+									className={clsx(
+										"p-3 rounded-lg border text-sm transition-colors capitalize",
+										formData.goal === Goal[goalKey]
+											? "bg-blue-600 border-blue-500 text-white"
+											: "bg-zinc-900 border-zinc-800 text-zinc-400 hover:bg-zinc-800",
+									)}
+								>
+									{labels[key] || key}
+								</button>
+							);
+						})}
 					</div>
 				</div>
 			</div>

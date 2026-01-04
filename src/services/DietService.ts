@@ -23,9 +23,10 @@ export class DietService {
 		// Estimation: 0.04 kcal per step, 8 kcal per min of cardio (moderate)
 		const stepCalories = Math.round(todayActivity.steps * 0.04);
 		const cardioCalories = todayActivity.cardio * 8;
+		const activityCalories = stepCalories + cardioCalories;
 
 		const totalTDEE = Math.round(
-			(baseBMR + stepCalories + cardioCalories) * profile.activityLevel,
+			(baseBMR + activityCalories) * profile.activityLevel,
 		);
 
 		const dailyCaloriesTarget = Math.round(totalTDEE * profile.goal);
@@ -33,7 +34,7 @@ export class DietService {
 		return {
 			macros: calculateMacros(dailyCaloriesTarget, profile.weight),
 			totalTDEE,
-			stepCalories,
+			activityCalories,
 			dailyCaloriesTarget,
 			steps: todayActivity.steps,
 			estimatedDailySteps: profile.estimatedDailySteps,

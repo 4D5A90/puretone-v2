@@ -12,13 +12,20 @@ export const ActivityLevel = {
 export type ActivityLevelType =
 	(typeof ActivityLevel)[keyof typeof ActivityLevel];
 
-export const Goal = {
-	Cut: 0.8,
-	Maintain: 1,
-	Bulk: 1.2,
+export const MetabolismAlgorithm = {
+	MifflinStJeor: "mifflin-st-jeor",
+	HarrisBenedict: "harris-benedict",
+	KatchMcArdle: "katch-mcardle",
 } as const;
 
-export type GoalType = (typeof Goal)[keyof typeof Goal];
+export type MetabolismAlgorithmType =
+	(typeof MetabolismAlgorithm)[keyof typeof MetabolismAlgorithm];
+
+export const Goal = {
+	cut: 0.8,
+	maintain: 1,
+	bulk: 1.2,
+} as const;
 
 export interface UserProfile {
 	age: number;
@@ -26,8 +33,9 @@ export interface UserProfile {
 	weight: number; // kg
 	gender: "male" | "female";
 	activityLevel: ActivityLevelType;
-	goal: GoalType;
+	goal: keyof typeof Goal;
 	estimatedDailySteps: number; // Target steps per day
+	metabolismAlgorithm: MetabolismAlgorithmType;
 }
 
 interface UserState {
@@ -48,15 +56,29 @@ export const useUserStore = create<UserState>()(
 		}),
 		{
 			name: "puretone-user-storage",
-			version: 1, // Increment this to force migration
+			version: 4, // Increment this to force migration
 			migrate: (persistedState: any) => {
-				// Migrate old profiles to include estimatedDailySteps
+				// Migrate old profiles to include estimatedDailySteps, metabolismAlgorithm, and goalValues
 				if (persistedState?.profile) {
 					const profile = persistedState.profile;
 
 					// Set default estimatedDailySteps if missing
 					if (profile.estimatedDailySteps === undefined) {
 						profile.estimatedDailySteps = 10000;
+					}
+
+					// Set default metabolismAlgorithm if missing
+					if (profile.metabolismAlgorithm === undefined) {
+						profile.metabolismAlgorithm = MetabolismAlgorithm.MifflinStJeor;
+					}
+
+					// Set default goalValues if missing
+					if (profile.goalValues === undefined) {
+						profile.goalValues = {
+							cut: 0.8,
+							maintain: 1,
+							bulk: 1.2,
+						};
 					}
 				}
 

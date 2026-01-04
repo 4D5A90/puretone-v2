@@ -1,8 +1,8 @@
 import { Flame, Footprints, GlassWater, PlusCircle, X } from "lucide-react";
 import { useState } from "react";
+import { ActivityCard } from "../components/layout/ActivityCard";
 import { useDailyTargets } from "../hooks/useDailyTargets";
 import {
-	ActivityMapping,
 	ActivityRepository,
 	type ActivityType,
 } from "../services/storage/ActivityRepository";
@@ -50,10 +50,10 @@ export default function ActivityPage() {
 	const [selectedActivity, setSelectedActivity] =
 		useState<ActivityConfig | null>(null);
 	const [inputValue, setInputValue] = useState("");
-	const { data, reload } = useDailyTargets();
+	const { targets, reload } = useDailyTargets();
 
 	const todayActivity = {
-		steps: data?.steps ?? 0,
+		steps: targets?.steps ?? 0,
 		cardio: 0, // Will need to be added to DietService
 		water: 0, // Will need to be added to DietService
 	};
@@ -96,11 +96,9 @@ export default function ActivityPage() {
 							key={activity.type}
 							type="button"
 							onClick={() => openModal(activity)}
-							className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col items-center justify-center gap-2 aspect-square"
+							className="bg-zinc-900 p-0 rounded-2xl border border-zinc-800 hover:border-zinc-700 transition-colors flex flex-col items-center justify-center gap-2 aspect-square"
 						>
-							<div className={`p-3 ${activity.bgColor} rounded-xl`}>
-								<Icon size={32} className={activity.color} />
-							</div>
+							<Icon size={32} className={activity.color} />
 							<p className="text-xs text-zinc-500 uppercase tracking-wider">
 								{activity.label}
 							</p>
@@ -109,55 +107,9 @@ export default function ActivityPage() {
 				})}
 			</div>
 
-			<div className="bg-zinc-900 p-4 rounded-2xl border border-zinc-800">
-				<div className="flex justify-between items-center mb-2">
-					<div>
-						<p className="text-zinc-400 text-xs">Activity</p>
-						<p className="text-xl font-bold text-white">
-							{data?.steps ?? 0} steps
-						</p>
-					</div>
-					<div className="text-right">
-						<p className="text-green-500 font-bold">
-							+{data?.stepCalories ?? 0} kcal
-						</p>
-					</div>
-				</div>
+			<div id="activity-separator" className="border-t border-zinc-800" />
 
-				{data && data.logs.length > 0 && (
-					<div className="mt-4 space-y-2 border-t border-zinc-800 pt-4">
-						<p className="text-xs text-zinc-500 font-medium uppercase">
-							Today's Activity
-						</p>
-						<div className="space-y-2 max-h-[120px] overflow-y-auto pr-2">
-							{[...data.logs]
-								.reverse()
-								.slice(0, 5)
-								.map((log) => (
-									<div
-										key={log.id}
-										className="flex justify-between text-sm text-zinc-400 bg-zinc-950/50 p-2 rounded"
-									>
-										<span>
-											{new Date(log.timestamp).toLocaleTimeString([], {
-												hour: "2-digit",
-												minute: "2-digit",
-											})}
-										</span>
-										<span className="text-white">
-											+{log.amount}{" "}
-											{
-												ActivityMapping[
-													log.type as keyof typeof ActivityMapping
-												]
-											}
-										</span>
-									</div>
-								))}
-						</div>
-					</div>
-				)}
-			</div>
+			{targets && <ActivityCard data={targets} />}
 
 			{/* Modal */}
 			{selectedActivity && (

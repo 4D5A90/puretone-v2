@@ -15,7 +15,7 @@ export interface DailyTargets {
 		fats: number;
 	};
 	totalTDEE: number;
-	stepCalories: number;
+	activityCalories: number;
 	dailyCaloriesTarget: number;
 	steps: number;
 	estimatedDailySteps: number;
@@ -46,7 +46,7 @@ export function useDailyTargets() {
 	}, [loadTargets]);
 
 	return {
-		data,
+		targets: data,
 		isLoading,
 		reload: loadTargets,
 	};
